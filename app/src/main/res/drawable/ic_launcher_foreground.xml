@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 蓝色圆形背景 -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M0,0h108v108H0z" />
+    <!-- 白色播放箭头 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,32 L42,76 L76,54 Z"
+        android:strokeWidth="2" />
+    <!-- Dy 文字 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,84 Q24,92 32,92 L48,92 Q56,92 56,84 L56,84 Q56,88 48,88 L32,88 Q28,88 28,84 Z"
+        android:strokeWidth="0" />
+</vector>

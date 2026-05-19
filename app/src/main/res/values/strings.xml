@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dyoo</string>
+    <string name="xposed_description">抖音增强模块 - 视频下载、图片保存、去水印、WebDav上传</string>
+    <string name="advanced_settings">高级设置</string>
+</resources>
