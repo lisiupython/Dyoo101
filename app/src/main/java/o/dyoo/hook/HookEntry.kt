@@ -1,13 +1,8 @@
 package o.dyoo.hook
 
-import android.os.Build
 import android.util.Log
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.annotations.BeforeInvocation
-import io.github.libxposed.api.annotations.XposedHooker
-import io.github.libxposed.api.interfaces.MethodHooker
-import io.github.libxposed.api.interfaces.MethodHooker.Unhook
 import o.dyoo.hook.dexkit.DouyinFinder
 import o.dyoo.hook.impl.VideoHook
 import o.dyoo.hook.impl.ImageHook
