@@ -37,14 +37,14 @@ object WatermarkHook {
             val urlMethod = builderClass.getDeclaredMethod("url", String::class.java)
 
             module.hook(urlMethod).intercept(XposedInterface.Hooker { chain ->
-                val args = chain.getArgs()
+                val args = chain.getArgs().toMutableList()
                 val arg = args[0]
                 if (arg is String) {
                     val modified = removeWatermarkParams(arg)
                     if (modified != arg) {
                         args[0] = modified
                         Log.d(TAG, "去除水印: $arg -> $modified")
-                        return@Hooker chain.proceed(args)
+                        return@Hooker chain.proceed(args.toTypedArray())
                     }
                 }
                 chain.proceed()
