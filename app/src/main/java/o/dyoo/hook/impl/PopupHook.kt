@@ -1,8 +1,8 @@
 package o.dyoo.hook.impl
 
 import android.app.Activity
+import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.interfaces.MethodHooker
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.ui.FloatingView
 
@@ -18,29 +18,25 @@ object PopupHook {
         try {
             // Hook Activity.onResume
             val onResumeMethod = Activity::class.java.getDeclaredMethod("onResume")
-            module.hook(onResumeMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val result = chain.proceed()
-                    (chain.getThisObject() as? Activity)?.let {
-                        if (it.packageName == "com.ss.android.ugc.aweme") {
-                            FloatingView.show(it)
-                        }
+            module.hook(onResumeMethod).intercept(XposedInterface.Hooker { chain ->
+                val result = chain.proceed()
+                (chain.getThisObject() as? Activity)?.let {
+                    if (it.packageName == "com.ss.android.ugc.aweme") {
+                        FloatingView.show(it)
                     }
-                    return result
                 }
+                result
             })
 
             // Hook Activity.onPause
             val onPauseMethod = Activity::class.java.getDeclaredMethod("onPause")
-            module.hook(onPauseMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    (chain.getThisObject() as? Activity)?.let {
-                        if (it.packageName == "com.ss.android.ugc.aweme") {
-                            FloatingView.hide()
-                        }
+            module.hook(onPauseMethod).intercept(XposedInterface.Hooker { chain ->
+                (chain.getThisObject() as? Activity)?.let {
+                    if (it.packageName == "com.ss.android.ugc.aweme") {
+                        FloatingView.hide()
                     }
-                    return chain.proceed()
                 }
+                chain.proceed()
             })
         } catch (e: Throwable) {
             // 静默处理

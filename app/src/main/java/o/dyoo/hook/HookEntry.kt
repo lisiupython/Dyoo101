@@ -3,6 +3,7 @@ package o.dyoo.hook
 import android.util.Log
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface
 import o.dyoo.hook.dexkit.DouyinFinder
 import o.dyoo.hook.impl.VideoHook
 import o.dyoo.hook.impl.ImageHook
@@ -15,7 +16,7 @@ import o.dyoo.hook.impl.CleanModeHook
  *
  * 继承 XposedModule，通过生命周期回调管理 Hook
  */
-class HookEntry(base: XposedInterface) : XposedModule(base) {
+class HookEntry : XposedModule() {
 
     companion object {
         private const val TAG = "Dyoo.HookEntry"
@@ -34,14 +35,14 @@ class HookEntry(base: XposedInterface) : XposedModule(base) {
     /**
      * 模块加载回调 - 在模块被加载到目标进程时调用
      */
-    override fun onModuleLoaded(param: ModuleLoadedParam) {
+    override fun onModuleLoaded(param: XposedModuleInterface.ModuleLoadedParam) {
         Log.i(TAG, "模块加载: process=${param.processName}, framework=${frameworkName}")
     }
 
     /**
      * 包加载回调 - 安装 Hook 的主要时机
      */
-    override fun onPackageLoaded(param: PackageLoadedParam) {
+    override fun onPackageLoaded(param: XposedModuleInterface.PackageLoadedParam) {
         val packageName = param.packageName
         Log.i(TAG, "包加载: $packageName")
 
@@ -50,7 +51,7 @@ class HookEntry(base: XposedInterface) : XposedModule(base) {
         Log.i(TAG, "检测到抖音，开始安装 Hook")
 
         try {
-            val classLoader = param.classLoader
+            val classLoader = param.defaultClassLoader
 
             // 1. 运行时搜索抖音关键类
             DouyinFinder.init(classLoader)

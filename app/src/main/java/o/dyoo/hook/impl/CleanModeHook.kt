@@ -7,8 +7,8 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.interfaces.MethodHooker
 import o.dyoo.core.config.ModuleConfig
 
 /**
@@ -58,39 +58,33 @@ object CleanModeHook {
         try {
             // Hook MediaPlayer.start()
             val startMethod = MediaPlayer::class.java.getDeclaredMethod("start")
-            module.hook(startMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val result = chain.proceed()
-                    if (!isCleanMode) return result
-                    isPlaying = true
-                    Log.d(TAG, "视频开始播放 - 隐藏 UI")
-                    hideAllUI()
-                    return result
-                }
+            module.hook(startMethod).intercept(XposedInterface.Hooker { chain ->
+                val result = chain.proceed()
+                if (!isCleanMode) return@Hooker result
+                isPlaying = true
+                Log.d(TAG, "视频开始播放 - 隐藏 UI")
+                hideAllUI()
+                result
             })
 
             // Hook MediaPlayer.pause()
             val pauseMethod = MediaPlayer::class.java.getDeclaredMethod("pause")
-            module.hook(pauseMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val result = chain.proceed()
-                    isPlaying = false
-                    Log.d(TAG, "视频暂停 - 显示 UI")
-                    showAllUI()
-                    return result
-                }
+            module.hook(pauseMethod).intercept(XposedInterface.Hooker { chain ->
+                val result = chain.proceed()
+                isPlaying = false
+                Log.d(TAG, "视频暂停 - 显示 UI")
+                showAllUI()
+                result
             })
 
             // Hook MediaPlayer.stop()
             val stopMethod = MediaPlayer::class.java.getDeclaredMethod("stop")
-            module.hook(stopMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val result = chain.proceed()
-                    isPlaying = false
-                    Log.d(TAG, "视频停止 - 显示 UI")
-                    showAllUI()
-                    return result
-                }
+            module.hook(stopMethod).intercept(XposedInterface.Hooker { chain ->
+                val result = chain.proceed()
+                isPlaying = false
+                Log.d(TAG, "视频停止 - 显示 UI")
+                showAllUI()
+                result
             })
 
             Log.i(TAG, "MediaPlayer hook 成功")
@@ -111,17 +105,15 @@ object CleanModeHook {
                 android.os.Bundle::class.java
             )
 
-            module.hook(onCreateMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val result = chain.proceed()
-                    val activity = chain.getThisObject() as? Activity ?: return result
-                    if (activity.packageName != "com.ss.android.ugc.aweme") return result
-                    lastActivity = activity
-                    isCleanMode = true
-                    setupTouchListener(activity)
-                    Log.d(TAG, "Activity 创建: ${activity.javaClass.simpleName}")
-                    return result
-                }
+            module.hook(onCreateMethod).intercept(XposedInterface.Hooker { chain ->
+                val result = chain.proceed()
+                val activity = chain.getThisObject() as? Activity ?: return@Hooker result
+                if (activity.packageName != "com.ss.android.ugc.aweme") return@Hooker result
+                lastActivity = activity
+                isCleanMode = true
+                setupTouchListener(activity)
+                Log.d(TAG, "Activity 创建: ${activity.javaClass.simpleName}")
+                result
             })
 
             Log.i(TAG, "Activity 生命周期 hook 成功")

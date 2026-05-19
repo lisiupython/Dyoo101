@@ -5,8 +5,8 @@ import android.net.Uri
 import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
+import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.interfaces.MethodHooker
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
 
@@ -33,18 +33,16 @@ object ImageHook {
         try {
             val method = ImageView::class.java.getDeclaredMethod("setImageURI", Uri::class.java)
 
-            module.hook(method, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val args = chain.getArgs()
-                    val uri = args[0] as? Uri
-                    uri?.toString()?.let { url ->
-                        if (url.startsWith("http")) {
-                            lastImageUrl = url
-                            Log.d(TAG, "捕获图片URL: $url")
-                        }
+            module.hook(method).intercept(XposedInterface.Hooker { chain ->
+                val args = chain.getArgs()
+                val uri = args[0] as? Uri
+                uri?.toString()?.let { url ->
+                    if (url.startsWith("http")) {
+                        lastImageUrl = url
+                        Log.d(TAG, "捕获图片URL: $url")
                     }
-                    return chain.proceed()
                 }
+                chain.proceed()
             })
             Log.i(TAG, "图片 Hook 成功")
         } catch (e: Throwable) {

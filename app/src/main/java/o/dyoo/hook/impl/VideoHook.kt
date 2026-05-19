@@ -5,8 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.interfaces.MethodHooker
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
 
@@ -43,21 +43,19 @@ object VideoHook {
                 android.app.DownloadManager.Request::class.java
             )
 
-            module.hook(method, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    try {
-                        val args = chain.getArgs()
-                        val request = args[0] ?: return chain.proceed()
-                        val uriField = request.javaClass.getDeclaredField("mUri")
-                        uriField.isAccessible = true
-                        val uri = uriField.get(request) as? String
-                        if (!uri.isNullOrEmpty() && uri.contains("douyin")) {
-                            lastVideoUrl = uri
-                            Log.d(TAG, "捕获视频URL: $uri")
-                        }
-                    } catch (_: Throwable) {}
-                    return chain.proceed()
-                }
+            module.hook(method).intercept(XposedInterface.Hooker { chain ->
+                try {
+                    val args = chain.getArgs()
+                    val request = args[0] ?: return@Hooker chain.proceed()
+                    val uriField = request.javaClass.getDeclaredField("mUri")
+                    uriField.isAccessible = true
+                    val uri = uriField.get(request) as? String
+                    if (!uri.isNullOrEmpty() && uri.contains("douyin")) {
+                        lastVideoUrl = uri
+                        Log.d(TAG, "捕获视频URL: $uri")
+                    }
+                } catch (_: Throwable) {}
+                chain.proceed()
             })
             Log.i(TAG, "DownloadManager hook 成功")
         } catch (e: Throwable) {
@@ -73,22 +71,20 @@ object VideoHook {
             val realCallClass = classLoader.loadClass("okhttp3.internal.connection.RealCall")
             val executeMethod = realCallClass.getDeclaredMethod("execute")
 
-            module.hook(executeMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val result = chain.proceed()
-                    try {
-                        val response = result
-                        val requestField = response?.javaClass?.getDeclaredMethod("request")
-                        val request = requestField?.invoke(response)
-                        val urlMethod = request?.javaClass?.getMethod("url", String::class.java)
-                        val url = urlMethod?.invoke(request) as? String
-                        if (url != null && (url.contains(".mp4") || url.contains("video"))) {
-                            lastVideoUrl = url
-                            Log.d(TAG, "OkHttp捕获视频URL: $url")
-                        }
-                    } catch (_: Throwable) {}
-                    return result
-                }
+            module.hook(executeMethod).intercept(XposedInterface.Hooker { chain ->
+                val result = chain.proceed()
+                try {
+                    val response = result
+                    val requestField = response?.javaClass?.getDeclaredMethod("request")
+                    val request = requestField?.invoke(response)
+                    val urlMethod = request?.javaClass?.getMethod("url", String::class.java)
+                    val url = urlMethod?.invoke(request) as? String
+                    if (url != null && (url.contains(".mp4") || url.contains("video"))) {
+                        lastVideoUrl = url
+                        Log.d(TAG, "OkHttp捕获视频URL: $url")
+                    }
+                } catch (_: Throwable) {}
+                result
             })
             Log.i(TAG, "OkHttp hook 成功")
         } catch (e: Throwable) {

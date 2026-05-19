@@ -1,8 +1,8 @@
 package o.dyoo.hook.impl
 
 import android.util.Log
+import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.interfaces.MethodHooker
 import o.dyoo.core.config.ModuleConfig
 
 /**
@@ -36,20 +36,18 @@ object WatermarkHook {
             val builderClass = classLoader.loadClass("okhttp3.Request\$Builder")
             val urlMethod = builderClass.getDeclaredMethod("url", String::class.java)
 
-            module.hook(urlMethod, object : MethodHooker {
-                override fun intercept(chain: MethodHooker.Chain): Any? {
-                    val args = chain.getArgs()
-                    val arg = args[0]
-                    if (arg is String) {
-                        val modified = removeWatermarkParams(arg)
-                        if (modified != arg) {
-                            args[0] = modified
-                            Log.d(TAG, "去除水印: $arg -> $modified")
-                            return chain.proceed(args)
-                        }
+            module.hook(urlMethod).intercept(XposedInterface.Hooker { chain ->
+                val args = chain.getArgs()
+                val arg = args[0]
+                if (arg is String) {
+                    val modified = removeWatermarkParams(arg)
+                    if (modified != arg) {
+                        args[0] = modified
+                        Log.d(TAG, "去除水印: $arg -> $modified")
+                        return@Hooker chain.proceed(args)
                     }
-                    return chain.proceed()
                 }
+                chain.proceed()
             })
             Log.i(TAG, "去水印 Hook 成功")
         } catch (e: Throwable) {
