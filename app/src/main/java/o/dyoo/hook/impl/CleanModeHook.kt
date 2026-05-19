@@ -7,7 +7,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.interfaces.MethodHooker
 import o.dyoo.core.config.ModuleConfig
@@ -60,9 +59,8 @@ object CleanModeHook {
             // Hook MediaPlayer.start()
             val startMethod = MediaPlayer::class.java.getDeclaredMethod("start")
             module.hook(startMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? = null
-
-                override fun after(result: Any?): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val result = chain.proceed()
                     if (!isCleanMode) return result
                     isPlaying = true
                     Log.d(TAG, "视频开始播放 - 隐藏 UI")
@@ -74,9 +72,8 @@ object CleanModeHook {
             // Hook MediaPlayer.pause()
             val pauseMethod = MediaPlayer::class.java.getDeclaredMethod("pause")
             module.hook(pauseMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? = null
-
-                override fun after(result: Any?): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val result = chain.proceed()
                     isPlaying = false
                     Log.d(TAG, "视频暂停 - 显示 UI")
                     showAllUI()
@@ -87,9 +84,8 @@ object CleanModeHook {
             // Hook MediaPlayer.stop()
             val stopMethod = MediaPlayer::class.java.getDeclaredMethod("stop")
             module.hook(stopMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? = null
-
-                override fun after(result: Any?): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val result = chain.proceed()
                     isPlaying = false
                     Log.d(TAG, "视频停止 - 显示 UI")
                     showAllUI()
@@ -116,10 +112,9 @@ object CleanModeHook {
             )
 
             module.hook(onCreateMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? = null
-
-                override fun after(result: Any?): Any? {
-                    val activity = this@after as? Activity ?: return result
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val result = chain.proceed()
+                    val activity = chain.getThisObject() as? Activity ?: return result
                     if (activity.packageName != "com.ss.android.ugc.aweme") return result
                     lastActivity = activity
                     isCleanMode = true

@@ -16,7 +16,6 @@ import o.dyoo.core.download.Downloader
  * 策略：
  * 1. Hook DownloadManager.enqueue() 捕获视频下载请求的 URL (稳定 API)
  * 2. Hook okhttp3.Response 捕获包含视频播放地址的响应
- * 3. 通过 DouyinFinder 运行时搜索视频数据模型类的 getVideoUrl() 方法
  */
 object VideoHook {
     private const val TAG = "Dyoo.VideoHook"
@@ -45,9 +44,10 @@ object VideoHook {
             )
 
             module.hook(method, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
                     try {
-                        val request = args[0] ?: return null
+                        val args = chain.getArgs()
+                        val request = args[0] ?: return chain.proceed()
                         val uriField = request.javaClass.getDeclaredField("mUri")
                         uriField.isAccessible = true
                         val uri = uriField.get(request) as? String
@@ -56,10 +56,8 @@ object VideoHook {
                             Log.d(TAG, "捕获视频URL: $uri")
                         }
                     } catch (_: Throwable) {}
-                    return null
+                    return chain.proceed()
                 }
-
-                override fun after(result: Any?): Any? = result
             })
             Log.i(TAG, "DownloadManager hook 成功")
         } catch (e: Throwable) {
@@ -76,9 +74,8 @@ object VideoHook {
             val executeMethod = realCallClass.getDeclaredMethod("execute")
 
             module.hook(executeMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? = null
-
-                override fun after(result: Any?): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val result = chain.proceed()
                     try {
                         val response = result
                         val requestField = response?.javaClass?.getDeclaredMethod("request")

@@ -19,10 +19,9 @@ object PopupHook {
             // Hook Activity.onResume
             val onResumeMethod = Activity::class.java.getDeclaredMethod("onResume")
             module.hook(onResumeMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? = null
-
-                override fun after(result: Any?): Any? {
-                    (this@after as? Activity)?.let {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val result = chain.proceed()
+                    (chain.getThisObject() as? Activity)?.let {
                         if (it.packageName == "com.ss.android.ugc.aweme") {
                             FloatingView.show(it)
                         }
@@ -34,16 +33,14 @@ object PopupHook {
             // Hook Activity.onPause
             val onPauseMethod = Activity::class.java.getDeclaredMethod("onPause")
             module.hook(onPauseMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? {
-                    (this@before as? Activity)?.let {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    (chain.getThisObject() as? Activity)?.let {
                         if (it.packageName == "com.ss.android.ugc.aweme") {
                             FloatingView.hide()
                         }
                     }
-                    return null
+                    return chain.proceed()
                 }
-
-                override fun after(result: Any?): Any? = result
             })
         } catch (e: Throwable) {
             // 静默处理

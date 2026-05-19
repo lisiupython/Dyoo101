@@ -37,19 +37,19 @@ object WatermarkHook {
             val urlMethod = builderClass.getDeclaredMethod("url", String::class.java)
 
             module.hook(urlMethod, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val args = chain.getArgs()
                     val arg = args[0]
                     if (arg is String) {
                         val modified = removeWatermarkParams(arg)
                         if (modified != arg) {
                             args[0] = modified
                             Log.d(TAG, "去除水印: $arg -> $modified")
+                            return chain.proceed(args)
                         }
                     }
-                    return null
+                    return chain.proceed()
                 }
-
-                override fun after(result: Any?): Any? = result
             })
             Log.i(TAG, "去水印 Hook 成功")
         } catch (e: Throwable) {

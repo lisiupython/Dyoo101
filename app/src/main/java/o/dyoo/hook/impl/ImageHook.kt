@@ -34,7 +34,8 @@ object ImageHook {
             val method = ImageView::class.java.getDeclaredMethod("setImageURI", Uri::class.java)
 
             module.hook(method, object : MethodHooker {
-                override fun before(args: Array<Any?>): Any? {
+                override fun intercept(chain: MethodHooker.Chain): Any? {
+                    val args = chain.getArgs()
                     val uri = args[0] as? Uri
                     uri?.toString()?.let { url ->
                         if (url.startsWith("http")) {
@@ -42,10 +43,8 @@ object ImageHook {
                             Log.d(TAG, "捕获图片URL: $url")
                         }
                     }
-                    return null
+                    return chain.proceed()
                 }
-
-                override fun after(result: Any?): Any? = result
             })
             Log.i(TAG, "图片 Hook 成功")
         } catch (e: Throwable) {
