@@ -51,7 +51,7 @@ class HookEntry : XposedModule() {
         Log.i(TAG, "检测到抖音，开始安装 Hook")
 
         try {
-            val classLoader = param.classLoader  // ✅ 应用实际使用的 ClassLoader
+            val classLoader = param.defaultClassLoader
 
             // 1. 运行时搜索抖音关键类
             DouyinFinder.init(classLoader)
